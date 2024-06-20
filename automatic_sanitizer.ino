@@ -2,69 +2,69 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 
-// Inicializace servo motoru
+// Initialization of the servo motor
 Servo Myservo;
 
-// Definice pinů pro ultrazvukový senzor
+// Definition of pins for the ultrasonic sensor
 #define trigPin 10
 #define echoPin 9
 
-// Inicializace LCD displeje (I2C adresa 0x27, 20 znaků na 4 řádky)
+// Initialization of the LCD display (I2C address 0x27, 20 characters by 4 lines)
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-// Proměnné pro servo pozici, dobu odezvy a vzdálenost
+// Variables for servo position, response time, and distance
 int pos;
-long odezva, vzdalenost;
+long response, distance;
 
-// Konstanta pro refresh rate displeje
+// Constant for the display refresh rate
 const long interval = 500;
 
-// Stavová proměnná pro dávkování
+// State variable for dispensing
 bool dispensing = false;
 
 void setup() {
-  // Inicializace sériové komunikace pro debugování
+  // Initialization of serial communication for debugging
   Serial.begin(9600);
 
-  // Připojení servo motoru k pinu 3
+  // Connecting the servo motor to pin 3
   Myservo.attach(3);
 
-  // Inicializace LCD displeje
+  // Initialization of the LCD display
   lcd.init();
   lcd.backlight();
   lcd.setCursor(3, 0);
-  lcd.print("Ocistete se");
+  lcd.print("Clean your hands");
 
-  // Nastavení pinů pro ultrazvukový senzor
+  // Setting pins for the ultrasonic sensor
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
 
 void loop() {
-  // Spuštění trig pinu pro vyslání ultrazvukového pulsu
+  // Trigger the trig pin to send an ultrasonic pulse
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);   
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-  // Měření doby trvání echa
-  odezva = pulseIn(echoPin, HIGH);
+  // Measuring the duration of the echo
+  response = pulseIn(echoPin, HIGH);
 
-  // Výpočet vzdálenosti v centimetrech
-  vzdalenost = odezva / 58.2;
+  // Calculating distance in centimeters
+  distance = response / 58.2;
 
-  // Kontrola, zda je vzdálenost menší než 15 cm a větší než 0
-  if (vzdalenost < 15 && vzdalenost > 0) {
+  // Checking if the distance is less than 15 cm and greater than 0
+  if (distance < 15 && distance > 0) {
     if (!dispensing) {
-      // Pokud není právě dávkováno, zobrazí zprávu na LCD
+      // If not currently dispensing, display a message on the LCD
       lcd.clear();
       lcd.setCursor(4, 0);
-      lcd.print("Davkuji!");
+      lcd.print("Dispensing!");
       dispensing = true;
     }
 
-    // Pohyb servo motoru na pozici 40 stupňů a zpět
+    // Moving the servo motor to the 40-degree position and back
     for(pos = 0; pos <= 40; pos++) {
       Myservo.write(pos);
       delay(15);
@@ -73,15 +73,15 @@ void loop() {
       Myservo.write(pos);
       delay(15);                                                 
     }
-    delay(500); // Krátká pauza po dávkování
+    delay(500); // Short pause after dispensing
   } else {
     if (dispensing) {
-      // Pokud je ruka mimo dosah, zobrazí výchozí zprávu na LCD
+      // If the hand is out of range, display the default message on the LCD
       lcd.clear();
       lcd.setCursor(3, 0);
-      lcd.print("Ocistete se");
+      lcd.print("Clean your hands");
       dispensing = false;
     }
   }
-  delay(10); // Krátké zpoždění před dalším měřením
+  delay(10); // Short delay before the next measurement
 }
